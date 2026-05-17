@@ -73,12 +73,99 @@ export default function StatsPage() {
           <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12, color: colors.text }}>{t('stats.categoryDistribution')}</div>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}>
-                {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                innerRadius={35}
+                dataKey="value"
+                label={false}
+                strokeWidth={2}
+                stroke={colors.card}
+              >
+                {pieData.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} style={{ outline: 'none' }} />
+                ))}
               </Pie>
-              <Tooltip formatter={(val) => `${val ?? 0} ${currencyConfig.primary.symbol}`} />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const item = payload[0];
+                  const pct = ((item.payload.percent ?? 0) * 100).toFixed(1);
+                  return (
+                    <div style={{
+                      background: colors.card,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: 8,
+                      padding: '8px 14px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      direction: 'rtl',
+                      textAlign: 'right',
+                    }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: colors.text, marginBottom: 2 }}>
+                        {item.name}
+                      </div>
+                      <div style={{ fontSize: 12, color: colors.textSecondary }}>
+                        {item.value} {currencyConfig.primary.symbol} — {pct}%
+                      </div>
+                    </div>
+                  );
+                }}
+              />
             </PieChart>
           </ResponsiveContainer>
+
+          {/* Legend */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+            gap: '8px 12px',
+            marginTop: 8,
+            direction: 'rtl',
+            textAlign: 'right',
+          }}>
+            {pieData.map((entry) => {
+              const pct = totalSar > 0 ? ((entry.value / totalSar) * 100).toFixed(1) : '0';
+              return (
+                <div key={entry.name} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '4px 6px',
+                  borderRadius: 6,
+                  background: `${entry.color}12`,
+                  transition: 'background 0.2s',
+                }}>
+                  <span style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    background: entry.color,
+                    flexShrink: 0,
+                  }} />
+                  <span style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: colors.text,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}>
+                    {entry.name}
+                  </span>
+                  <span style={{
+                    fontSize: 11,
+                    color: colors.textSecondary,
+                    marginRight: 'auto',
+                    flexShrink: 0,
+                  }}>
+                    {pct}%
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       ) : (
         <div className="card" style={{ textAlign: 'center', padding: 20, color: colors.textSecondary }}>

@@ -36,7 +36,7 @@ export default function TagStatsPage() {
   }, [id]);
 
   if (loading) return <div className="spinner" style={{ minHeight: 400 }} />;
-  if (!tag || !stats) return <div style={{ padding: 40, textAlign: 'center', color: colors.textSecondary }}>{t('tags.tagNotFound')}</div>;
+  if (!tag || !stats) return <div style={{ padding: 40, textAlign: 'center', color: colors.textSecondary }}>{t('tags.notFound')}</div>;
 
   const pieData = Object.entries(stats.byCategory).sort((a, b) => b[1].sar - a[1].sar)
     .map(([name, data]) => ({ name, value: parseFloat(data.sar.toFixed(2)), color: CATEGORY_COLORS[name] || '#B0BEC5' }));

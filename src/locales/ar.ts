@@ -28,6 +28,9 @@ export default {
     topCategories: 'أعلى الفئات',
     expenses: 'المصاريف',
     noExpenses: 'لا توجد مصاريف لهذا الشهر',
+    search: 'بحث...',
+    allCategories: 'جميع الفئات',
+    allPayments: 'جميع طرق الدفع',
   },
   add: {
     addExpense: 'إضافة المصروف',
@@ -202,6 +205,8 @@ export default {
     selectMainCategoryAlert: 'يرجى اختيار الفئة الرئيسية',
     enterAmount: 'يرجى إدخال المبلغ',
     errorOccurred: 'حدث خطأ',
+    exchangeRate: 'سعر الصرف',
+    noTag: 'بدون تصنيف',
   },
   tags: {
     manageTags: 'التصنيفات والأحداث',
@@ -219,6 +224,9 @@ export default {
     notFound: 'لم يتم العثور على التصنيف',
     totalExpenses: 'مصروف',
     noExpensesForTag: 'لا توجد مصاريف لهذا التصنيف',
+    tagTotal: 'إجمالي التصنيف',
+    expensesCount: 'عمليات',
+    tagExpenses: 'مصاريف التصنيف',
   },
   offline: {
     banner: 'بدون اتصال - سيتم المزامنة لاحقاً',

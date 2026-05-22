@@ -81,7 +81,7 @@ export default function ExpenseForm({ onSubmit, submitLabel, initialData }: Prop
 
       <label className="label">{t('form.mainCategory')}</label>
       <select className="input" value={mainCategory} onChange={e => { setMainCategory(e.target.value); setSubCategory(''); }}>
-        <option value="">{t('form.selectCategory')}</option>
+        <option value="">{t('form.selectMainCategory')}</option>
         {categories.map(c => <option key={c.main} value={c.main}>{c.main}</option>)}
       </select>
 
@@ -114,7 +114,7 @@ export default function ExpenseForm({ onSubmit, submitLabel, initialData }: Prop
 
       <label className="label">{t('form.paymentMethod')}</label>
       <select className="input" value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
-        <option value="">{t('form.selectPayment')}</option>
+        <option value="">{t('form.selectPaymentMethod')}</option>
         {paymentMethods.map(m => <option key={m} value={m}>{m}</option>)}
       </select>
 

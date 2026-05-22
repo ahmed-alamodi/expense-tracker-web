@@ -34,7 +34,7 @@ export default function TabLayout({ children }: { children: React.ReactNode }) {
                 className={`tab-item ${isActive ? 'active' : ''}`}
               >
                 <tab.icon />
-                <span>{t(tab.labelKey)}</span>
+                <span>{t(tab.labelKey as any)}</span>
               </Link>
             );
           })}

@@ -28,6 +28,9 @@ export default {
     topCategories: 'Top Categories',
     expenses: 'Expenses',
     noExpenses: 'No expenses this month',
+    search: 'Search...',
+    allCategories: 'All Categories',
+    allPayments: 'All Payments',
   },
   add: {
     addExpense: 'Add Expense',
@@ -202,6 +205,8 @@ export default {
     selectMainCategoryAlert: 'Please select a main category',
     enterAmount: 'Please enter the amount',
     errorOccurred: 'An error occurred',
+    exchangeRate: 'Exchange Rate',
+    noTag: 'No Tag',
   },
   tags: {
     manageTags: 'Tags & Events',
@@ -219,6 +224,9 @@ export default {
     notFound: 'Tag not found',
     totalExpenses: 'expenses',
     noExpensesForTag: 'No expenses for this tag',
+    tagTotal: 'Tag Total',
+    expensesCount: 'expenses',
+    tagExpenses: 'Tag Expenses',
   },
   offline: {
     banner: 'Offline - will sync when connected',

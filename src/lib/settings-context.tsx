@@ -9,7 +9,7 @@ import {
   getCurrencyConfig, setCurrencyConfig as persistCurrencyConfig,
 } from './storage';
 import { isConfigured } from './supabase';
-import { getRemoteCategories, syncCategoriesToRemote } from './database';
+import { getRemoteCategories, syncCategoriesToRemote, getRemotePaymentMethods, syncPaymentMethodsToRemote, addRemotePaymentMethod, deleteRemotePaymentMethod } from './database';
 import { DEFAULT_CURRENCY_CONFIG } from '@/constants/categories';
 
 interface SettingsContextType {
@@ -23,6 +23,8 @@ interface SettingsContextType {
   updateCategories: (cats: CategoryGroup[]) => Promise<void>;
   updateCurrencyConfig: (config: CurrencyConfig) => Promise<void>;
   refreshSettings: () => Promise<void>;
+  addPaymentMethod: (method: string) => Promise<void>;
+  removePaymentMethod: (method: string) => Promise<void>;
 }
 
 const SettingsContext = createContext<SettingsContextType>({
@@ -36,6 +38,8 @@ const SettingsContext = createContext<SettingsContextType>({
   updateCategories: async () => {},
   updateCurrencyConfig: async () => {},
   refreshSettings: async () => {},
+  addPaymentMethod: async () => {},
+  removePaymentMethod: async () => {},
 });
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
@@ -60,7 +64,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
     if (isConfigured) {
       try {
-        const remoteCats = await getRemoteCategories();
+        const [remoteCats, remoteMethods] = await Promise.all([
+          getRemoteCategories(),
+          getRemotePaymentMethods()
+        ]);
+
         if (remoteCats.length > 0) {
           const merged: CategoryGroup[] = remoteCats.map(r => ({
             main: r.main_category,
@@ -71,8 +79,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         } else if (localCats.length > 0) {
           await syncCategoriesToRemote(localCats);
         }
+
+        if (remoteMethods.length > 0) {
+          setPaymentMethodsState(remoteMethods);
+          await persistPaymentMethods(remoteMethods);
+        } else if (methods.length > 0) {
+          await syncPaymentMethodsToRemote(methods);
+        }
       } catch {
-        // Use local categories on sync failure
+        // Use local data on sync failure
       }
     }
   }, []);
@@ -87,7 +102,40 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const updatePaymentMethods = useCallback(async (methods: string[]) => {
     setPaymentMethodsState(methods);
     await persistPaymentMethods(methods);
+    if (isConfigured) {
+      try {
+        await syncPaymentMethodsToRemote(methods);
+      } catch (e) {
+        console.error('Sync failed', e);
+      }
+    }
   }, []);
+
+  const addPaymentMethod = useCallback(async (method: string) => {
+    const updated = [...paymentMethods, method];
+    setPaymentMethodsState(updated);
+    await persistPaymentMethods(updated);
+    if (isConfigured) {
+      try {
+        await addRemotePaymentMethod(method, updated.length - 1);
+      } catch (e) {
+        console.error('Failed to add payment method to DB', e);
+      }
+    }
+  }, [paymentMethods]);
+
+  const removePaymentMethod = useCallback(async (method: string) => {
+    const updated = paymentMethods.filter(m => m !== method);
+    setPaymentMethodsState(updated);
+    await persistPaymentMethods(updated);
+    if (isConfigured) {
+      try {
+        await deleteRemotePaymentMethod(method);
+      } catch (e) {
+        console.error('Failed to delete payment method from DB', e);
+      }
+    }
+  }, [paymentMethods]);
 
   const updateCategories = useCallback(async (cats: CategoryGroup[]) => {
     setCategoriesState(cats);
@@ -121,6 +169,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         updateCategories,
         updateCurrencyConfig,
         refreshSettings: loadAll,
+        addPaymentMethod,
+        removePaymentMethod,
       }}
     >
       {children}

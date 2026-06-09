@@ -1,5 +1,5 @@
 import { supabase, isConfigured } from './supabase';
-import { Expense, Budget, MonthlyEstimate, Tag, CategoryGroup } from '@/types/expense';
+import { Expense, Budget, MonthlyEstimate, Tag, CategoryGroup, Debt } from '@/types/expense';
 
 function checkConfigured() {
   if (!isConfigured) {
@@ -248,6 +248,51 @@ export async function syncCategoriesToRemote(categories: CategoryGroup[]): Promi
   }
 }
 
+// Payment Methods functions
+export async function getRemotePaymentMethods(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('payment_methods')
+    .select('name')
+    .order('sort_order', { ascending: true });
+  if (error) throw error;
+  return data?.map(m => m.name) || [];
+}
+
+export async function syncPaymentMethodsToRemote(methods: string[]): Promise<void> {
+  const { data: existing, error: fetchErr } = await supabase.from('payment_methods').select('id, name');
+  if (fetchErr) throw fetchErr;
+
+  const existingMap = new Map((existing || []).map(e => [e.name, e.id]));
+  const newNames = new Set(methods);
+
+  const toDeleteIds = (existing || []).filter(e => !newNames.has(e.name)).map(e => e.id);
+  if (toDeleteIds.length > 0) {
+    const { error } = await supabase.from('payment_methods').delete().in('id', toDeleteIds);
+    if (error) throw error;
+  }
+
+  const toInsert = methods.filter(m => !existingMap.has(m)).map((m, idx) => ({ name: m, sort_order: idx }));
+  if (toInsert.length > 0) {
+    const { error } = await supabase.from('payment_methods').insert(toInsert);
+    if (error) throw error;
+  }
+
+  const toUpdate = methods.filter(m => existingMap.has(m)).map((m, idx) => ({ id: existingMap.get(m)!, sort_order: idx }));
+  for (const item of toUpdate) {
+    await supabase.from('payment_methods').update({ sort_order: item.sort_order }).eq('id', item.id);
+  }
+}
+
+export async function addRemotePaymentMethod(name: string, sortOrder: number): Promise<void> {
+  const { error } = await supabase.from('payment_methods').insert({ name, sort_order: sortOrder });
+  if (error) throw error;
+}
+
+export async function deleteRemotePaymentMethod(name: string): Promise<void> {
+  const { error } = await supabase.from('payment_methods').delete().eq('name', name);
+  if (error) throw error;
+}
+
 // Tags functions
 export async function getTags(): Promise<Tag[]> {
   const { data, error } = await supabase
@@ -316,4 +361,61 @@ export async function getTagStats(tagId: string) {
   }
 
   return { totalSar, totalYmr, byCategory, count: expenses.length };
+}
+
+// Debts functions
+export async function getDebts(): Promise<Debt[]> {
+  const { data, error } = await supabase
+    .from('debts')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data as Debt[];
+}
+
+export async function createDebt(debt: Omit<Debt, 'id' | 'user_id' | 'created_at'>): Promise<Debt> {
+  const { data, error } = await supabase
+    .from('debts')
+    .insert(debt)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Debt;
+}
+
+export async function updateDebt(id: string, debt: Partial<Debt>): Promise<Debt> {
+  const { data, error } = await supabase
+    .from('debts')
+    .update(debt)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Debt;
+}
+
+export async function payDebtInstallment(
+  debtId: string,
+  amount: number,
+  expenseData: Omit<Expense, 'id' | 'created_at' | 'user_id'>,
+  currentRemaining: number
+): Promise<void> {
+  // 1. Create the expense
+  const { error: expenseError } = await supabase
+    .from('expenses')
+    .insert(expenseData);
+  if (expenseError) throw expenseError;
+
+  // 2. Update the debt remaining amount
+  const newRemaining = Math.max(0, currentRemaining - amount);
+  const { error: debtError } = await supabase
+    .from('debts')
+    .update({ remaining_amount_sar: newRemaining })
+    .eq('id', debtId);
+  if (debtError) throw debtError;
+}
+
+export async function deleteDebt(id: string): Promise<void> {
+  const { error } = await supabase.from('debts').delete().eq('id', id);
+  if (error) throw error;
 }

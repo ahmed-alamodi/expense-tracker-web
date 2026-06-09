@@ -16,7 +16,7 @@ import {
   IoColorPaletteOutline, IoLanguageOutline, IoDownloadOutline,
   IoCashOutline, IoCardOutline, IoCalculatorOutline, IoListOutline,
   IoPricetagsOutline, IoInformationCircleOutline, IoLogOutOutline,
-  IoChevronBack, IoAdd, IoClose, IoDocumentOutline,
+  IoChevronBack, IoAdd, IoClose, IoDocumentOutline, IoWalletOutline,
 } from 'react-icons/io5';
 
 export default function SettingsPage() {
@@ -26,42 +26,8 @@ export default function SettingsPage() {
   const { t } = useTranslation();
   const { themeMode, setThemeMode } = useAppTheme();
   const { language, setLanguage } = useLanguage();
-  const { exchangeRate, paymentMethods, currencyConfig, updatePaymentMethods, updateCurrencyConfig, ready } = useSettings();
-  const [rate, setRate] = useState('');
-  const [methods, setMethods] = useState<string[]>([]);
-  const [newMethod, setNewMethod] = useState('');
+  const { ready } = useSettings();
   const [exporting, setExporting] = useState(false);
-
-  useEffect(() => {
-    if (ready) { setRate(exchangeRate.toString()); setMethods(paymentMethods); }
-  }, [ready, exchangeRate, paymentMethods]);
-
-  const handleSaveRate = async () => {
-    const val = parseFloat(rate);
-    if (isNaN(val) || val <= 0) { alert(t('common.error'), t('settings.invalidRate')); return; }
-    await updateCurrencyConfig({ ...currencyConfig, exchangeRate: val });
-    alert(t('common.done'), t('settings.rateSaved'));
-  };
-
-  const handleAddMethod = async () => {
-    if (!newMethod.trim()) return;
-    if (methods.includes(newMethod.trim())) { alert(t('common.warning'), t('settings.methodExists')); return; }
-    const updated = [...methods, newMethod.trim()];
-    setMethods(updated);
-    await updatePaymentMethods(updated);
-    setNewMethod('');
-  };
-
-  const handleRemoveMethod = async (method: string) => {
-    alert(t('common.delete'), `${t('common.delete')} "${method}"?`, [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('common.delete'), style: 'destructive', onPress: async () => {
-        const updated = methods.filter(m => m !== method);
-        setMethods(updated);
-        await updatePaymentMethods(updated);
-      }},
-    ]);
-  };
 
   const handleExport = async () => {
     if (!isConfigured) { alert(t('common.warning'), t('settings.setupSupabase')); return; }
@@ -140,54 +106,12 @@ export default function SettingsPage() {
         </button>
       </div>
 
-      {/* Currency */}
-      <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <IoCashOutline style={{ fontSize: 22, color: colors.tint }} />
-          <span style={{ fontSize: 16, fontWeight: 700 }}>{t('settings.currencies')}</span>
-        </div>
-        <p style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>{t('settings.currenciesDesc')}</p>
 
-        <label className="label">{t('settings.primaryCurrency')}</label>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-          <input className="input" style={{ flex: 1 }} value={currencyConfig.primary.name} onChange={e => updateCurrencyConfig({ ...currencyConfig, primary: { ...currencyConfig.primary, name: e.target.value } })} placeholder={t('settings.currencyName')} />
-          <input className="input" style={{ width: 60, textAlign: 'center', fontWeight: 700 }} value={currencyConfig.primary.symbol} onChange={e => updateCurrencyConfig({ ...currencyConfig, primary: { ...currencyConfig.primary, symbol: e.target.value } })} />
-        </div>
-
-        <label className="label">{t('settings.secondaryCurrency')}</label>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-          <input className="input" style={{ flex: 1 }} value={currencyConfig.secondary.name} onChange={e => updateCurrencyConfig({ ...currencyConfig, secondary: { ...currencyConfig.secondary, name: e.target.value } })} placeholder={t('settings.currencyName')} />
-          <input className="input" style={{ width: 60, textAlign: 'center', fontWeight: 700 }} value={currencyConfig.secondary.symbol} onChange={e => updateCurrencyConfig({ ...currencyConfig, secondary: { ...currencyConfig.secondary, symbol: e.target.value } })} />
-        </div>
-
-        <label className="label">{t('settings.exchangeRate')}</label>
-        <p style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 4 }}>1 {currencyConfig.primary.symbol} = ? {currencyConfig.secondary.symbol}</p>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <input className="input" style={{ flex: 1 }} type="number" value={rate} onChange={e => setRate(e.target.value)} />
-          <button className="btn btn-primary btn-small" onClick={handleSaveRate}>{t('common.save')}</button>
-        </div>
-      </div>
-
-      {/* Payment Methods */}
-      <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <IoCardOutline style={{ fontSize: 22, color: colors.tint }} />
-          <span style={{ fontSize: 16, fontWeight: 700 }}>{t('settings.paymentMethods')}</span>
-        </div>
-        {methods.map(method => (
-          <div key={method} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${colors.border}` }}>
-            <span style={{ fontSize: 15 }}>{method}</span>
-            <button className="icon-btn" style={{ color: colors.danger, fontSize: 18 }} onClick={() => handleRemoveMethod(method)}><IoClose /></button>
-          </div>
-        ))}
-        <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-          <input className="input" style={{ flex: 1 }} value={newMethod} onChange={e => setNewMethod(e.target.value)} placeholder={t('settings.newPaymentMethod')} />
-          <button className="btn btn-small" style={{ background: colors.success, color: '#fff' }} onClick={handleAddMethod}><IoAdd /></button>
-        </div>
-      </div>
 
       {/* Nav Cards */}
       {[
+        { icon: IoCashOutline, label: t('settings.currencies'), desc: t('settings.manageCurrenciesDesc'), href: '/currencies' },
+        { icon: IoCardOutline, label: t('settings.paymentMethods'), desc: t('settings.managePaymentMethodsDesc'), href: '/payment-methods' },
         { icon: IoCalculatorOutline, label: t('settings.monthlyEstimates'), desc: t('settings.monthlyEstimatesDesc'), href: '/estimates' },
         { icon: IoListOutline, label: t('settings.manageCategories'), desc: t('settings.manageCategoriesDesc'), href: '/categories' },
         { icon: IoPricetagsOutline, label: t('settings.manageTags'), desc: t('settings.manageTagsDesc'), href: '/tags' },

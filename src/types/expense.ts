@@ -76,3 +76,14 @@ export interface MonthYear {
 }
 
 export type PaymentMethod = string;
+
+export interface Debt {
+  id: string;
+  name: string;
+  total_amount_sar: number;
+  remaining_amount_sar: number;
+  start_date: string;
+  notes: string | null;
+  user_id?: string;
+  created_at?: string;
+}

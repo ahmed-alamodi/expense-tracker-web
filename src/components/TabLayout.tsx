@@ -4,13 +4,14 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { IoHome, IoAddCircle, IoBarChart, IoWallet, IoSettings } from 'react-icons/io5';
+import { IoHome, IoAddCircle, IoBarChart, IoWallet, IoSettings, IoReceipt } from 'react-icons/io5';
 
 const tabs = [
   { href: '/', icon: IoHome, labelKey: 'tabs.home' },
   { href: '/add', icon: IoAddCircle, labelKey: 'tabs.add' },
   { href: '/stats', icon: IoBarChart, labelKey: 'tabs.stats' },
   { href: '/budget', icon: IoWallet, labelKey: 'tabs.budget' },
+  { href: '/debts', icon: IoReceipt, labelKey: 'tabs.debts' },
   { href: '/settings', icon: IoSettings, labelKey: 'tabs.settings' },
 ];
 

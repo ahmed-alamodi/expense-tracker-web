@@ -10,6 +10,8 @@ function checkConfigured() {
 export async function getExpenses(filters?: {
   month?: number;
   year?: number;
+  startDate?: string;
+  endDate?: string;
   mainCategory?: string;
   paymentMethod?: string;
   search?: string;
@@ -21,7 +23,14 @@ export async function getExpenses(filters?: {
     .select('*')
     .order('date', { ascending: false });
 
-  if (filters?.month && filters?.year) {
+  if (filters?.startDate || filters?.endDate) {
+    if (filters.startDate) {
+      query = query.gte('date', filters.startDate);
+    }
+    if (filters.endDate) {
+      query = query.lte('date', filters.endDate);
+    }
+  } else if (filters?.month && filters?.year) {
     const startDate = `${filters.year}-${String(filters.month).padStart(2, '0')}-01`;
     const endMonth = filters.month === 12 ? 1 : filters.month + 1;
     const endYear = filters.month === 12 ? filters.year + 1 : filters.year;
@@ -90,18 +99,27 @@ export async function deleteExpense(id: string) {
   if (error) throw error;
 }
 
-export async function getMonthlyTotal(month: number, year: number) {
-  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-  const endMonth = month === 12 ? 1 : month + 1;
-  const endYear = month === 12 ? year + 1 : year;
-  const endDate = `${endYear}-${String(endMonth).padStart(2, '0')}-01`;
-
-  const { data, error } = await supabase
+export async function getMonthlyTotal(month: number, year: number, startDate?: string, endDate?: string) {
+  let query = supabase
     .from('expenses')
-    .select('amount_sar, amount_ymr, main_category')
-    .gte('date', startDate)
-    .lt('date', endDate);
+    .select('amount_sar, amount_ymr, main_category');
 
+  if (startDate || endDate) {
+    if (startDate) {
+      query = query.gte('date', startDate);
+    }
+    if (endDate) {
+      query = query.lte('date', endDate);
+    }
+  } else {
+    const start = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endMonth = month === 12 ? 1 : month + 1;
+    const endYear = month === 12 ? year + 1 : year;
+    const end = `${endYear}-${String(endMonth).padStart(2, '0')}-01`;
+    query = query.gte('date', start).lt('date', end);
+  }
+
+  const { data, error } = await query;
   if (error) throw error;
 
   const totalSar = (data || []).reduce((sum, e) => sum + (e.amount_sar || 0), 0);
@@ -396,9 +414,11 @@ export async function updateDebt(id: string, debt: Partial<Debt>): Promise<Debt>
 
 export async function payDebtInstallment(
   debtId: string,
-  amount: number,
+  amountSar: number,
+  amountYmr: number,
   expenseData: Omit<Expense, 'id' | 'created_at' | 'user_id'>,
-  currentRemaining: number
+  currentRemainingSar: number,
+  currentRemainingYmr: number
 ): Promise<void> {
   // 1. Create the expense
   const { error: expenseError } = await supabase
@@ -407,10 +427,14 @@ export async function payDebtInstallment(
   if (expenseError) throw expenseError;
 
   // 2. Update the debt remaining amount
-  const newRemaining = Math.max(0, currentRemaining - amount);
+  const newRemainingSar = Math.max(0, currentRemainingSar - amountSar);
+  const newRemainingYmr = Math.max(0, currentRemainingYmr - amountYmr);
   const { error: debtError } = await supabase
     .from('debts')
-    .update({ remaining_amount_sar: newRemaining })
+    .update({ 
+      remaining_amount_sar: newRemainingSar,
+      remaining_amount_ymr: newRemainingYmr
+    })
     .eq('id', debtId);
   if (debtError) throw debtError;
 }

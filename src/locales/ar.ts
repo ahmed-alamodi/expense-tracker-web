@@ -32,6 +32,11 @@ export default {
     search: 'بحث...',
     allCategories: 'جميع الفئات',
     allPayments: 'جميع طرق الدفع',
+    startDate: 'من تاريخ',
+    endDate: 'إلى تاريخ',
+    clearDates: 'إلغاء الفلترة بالتواريخ',
+    applyDates: 'تطبيق',
+    dateRange: 'تحديد فترة',
   },
   add: {
     addExpense: 'إضافة المصروف',

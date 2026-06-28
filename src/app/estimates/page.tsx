@@ -34,7 +34,7 @@ export default function EstimatesPage() {
   const fetchData = useCallback(async () => {
     if (!isConfigured) { setLoading(false); return; }
     setLoading(true);
-    try { setEstimates(await getMonthlyEstimates()); } catch {} finally { setLoading(false); }
+    try { setEstimates(await getMonthlyEstimates()); } catch { } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchData(); }, []);
@@ -87,7 +87,7 @@ export default function EstimatesPage() {
         <div style={{ margin: 16, padding: 20, borderRadius: 16, background: colors.tint, textAlign: 'center' }}>
           <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13 }}>{t('estimates.totalMonthlyEstimates')}</div>
           <div style={{ color: '#fff', fontSize: 28, fontWeight: 800 }}>{totalSar.toFixed(2)} {currencyConfig.primary.symbol}</div>
-          <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 14, marginTop: 2 }}>{totalYmr.toLocaleString()} {currencyConfig.secondary.symbol}</div>
+          <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 14, marginTop: 2 }}>{totalYmr?.toLocaleString()} {currencyConfig.secondary.symbol}</div>
         </div>
       )}
 
@@ -109,7 +109,7 @@ export default function EstimatesPage() {
               </div>
               <div style={{ textAlign: 'left' }}>
                 <div style={{ fontSize: 16, fontWeight: 700, color: colors.text }}>{item.amount_sar.toFixed(2)} {currencyConfig.primary.symbol}</div>
-                <div style={{ fontSize: 12, color: colors.textSecondary }}>{item.amount_ymr.toLocaleString()} {currencyConfig.secondary.symbol}</div>
+                <div style={{ fontSize: 12, color: colors.textSecondary }}>{item.amount_ymr?.toLocaleString()} {currencyConfig.secondary.symbol}</div>
               </div>
             </div>
             <div style={{ display: 'flex', borderTop: `1px solid ${colors.border}` }}>

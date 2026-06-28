@@ -12,6 +12,8 @@ export function useExpenses(filters?: {
   mainCategory?: string;
   paymentMethod?: string;
   search?: string;
+  startDate?: string;
+  endDate?: string;
   limit?: number;
 }) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -25,7 +27,8 @@ export function useExpenses(filters?: {
       return;
     }
 
-    const cacheKey = filters?.month && filters?.year
+    const hasCustomRange = !!(filters?.startDate || filters?.endDate);
+    const cacheKey = (filters?.month && filters?.year && !hasCustomRange)
       ? expensesCacheKey(filters.month, filters.year)
       : null;
 
@@ -58,6 +61,8 @@ export function useExpenses(filters?: {
     filters?.mainCategory,
     filters?.paymentMethod,
     filters?.search,
+    filters?.startDate,
+    filters?.endDate,
     filters?.limit,
   ]);
 
@@ -68,7 +73,7 @@ export function useExpenses(filters?: {
   return { expenses, loading, error, refresh: fetchExpenses };
 }
 
-export function useMonthlyTotal(month: number, year: number) {
+export function useMonthlyTotal(month: number, year: number, startDate?: string, endDate?: string) {
   const [data, setData] = useState<{
     totalSar: number;
     totalYmr: number;
@@ -82,25 +87,31 @@ export function useMonthlyTotal(month: number, year: number) {
       return;
     }
 
-    const cacheKey = monthlyTotalCacheKey(month, year);
-    const cached = await getCached<typeof data>(cacheKey);
-    if (cached) {
-      setData(cached.data);
-      setLoading(false);
-      if (!cached.stale) return;
+    const hasCustomRange = !!(startDate || endDate);
+    const cacheKey = hasCustomRange ? null : monthlyTotalCacheKey(month, year);
+    
+    if (cacheKey) {
+      const cached = await getCached<typeof data>(cacheKey);
+      if (cached) {
+        setData(cached.data);
+        setLoading(false);
+        if (!cached.stale) return;
+      }
     }
 
     try {
       setLoading(true);
-      const result = await db.getMonthlyTotal(month, year);
+      const result = await db.getMonthlyTotal(month, year, startDate, endDate);
       setData(result);
-      await setCache(cacheKey, result);
+      if (cacheKey) {
+        await setCache(cacheKey, result);
+      }
     } catch {
       // silent
     } finally {
       setLoading(false);
     }
-  }, [month, year]);
+  }, [month, year, startDate, endDate]);
 
   useEffect(() => {
     fetchData();

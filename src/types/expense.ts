@@ -82,6 +82,8 @@ export interface Debt {
   name: string;
   total_amount_sar: number;
   remaining_amount_sar: number;
+  total_amount_ymr: number;
+  remaining_amount_ymr: number;
   start_date: string;
   notes: string | null;
   user_id?: string;

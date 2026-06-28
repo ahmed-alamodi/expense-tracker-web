@@ -44,7 +44,7 @@ export default function ExpenseCard({ expense, onDelete }: Props) {
             {expense.amount_sar.toFixed(2)} {currencyConfig.primary.symbol}
           </div>
           <div style={{ fontSize: 12, color: colors.textSecondary }}>
-            {expense.amount_ymr.toLocaleString()} {currencyConfig.secondary.symbol}
+            {expense.amount_ymr?.toLocaleString()} {currencyConfig.secondary.symbol}
           </div>
         </div>
       </div>

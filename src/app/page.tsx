@@ -19,7 +19,7 @@ export default function HomePage() {
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
-  const [filters, setFilters] = useState<Filters>({ search: '', mainCategory: '', paymentMethod: '' });
+  const [filters, setFilters] = useState<Filters>({ search: '', mainCategory: '', paymentMethod: '', startDate: '', endDate: '' });
   const { categories: settingsCategories, paymentMethods: settingsPaymentMethods, currencyConfig } = useSettings();
   const { isOnline, pendingCount } = useNetwork();
   const categoryNames = settingsCategories.map(c => c.main);
@@ -29,8 +29,15 @@ export default function HomePage() {
     search: filters.search || undefined,
     mainCategory: filters.mainCategory || undefined,
     paymentMethod: filters.paymentMethod || undefined,
+    startDate: filters.startDate || undefined,
+    endDate: filters.endDate || undefined,
   });
-  const { totalSar, totalYmr, byCategory, refresh: refreshTotal } = useMonthlyTotal(month, year);
+  const { totalSar, totalYmr, byCategory, refresh: refreshTotal } = useMonthlyTotal(
+    month,
+    year,
+    filters.startDate || undefined,
+    filters.endDate || undefined
+  );
 
   const handlePrev = () => {
     if (month === 1) { setMonth(12); setYear(y => y - 1); }
@@ -48,12 +55,14 @@ export default function HomePage() {
       await invalidateCachePattern('monthly_total_');
       refresh();
       refreshTotal();
-    } catch {}
+    } catch { }
   };
 
   const topCategories = Object.entries(byCategory)
     .sort((a, b) => b[1].sar - a[1].sar)
     .slice(0, 4);
+
+  const hasCustomRange = !!(filters.startDate || filters.endDate);
 
   return (
     <>
@@ -64,7 +73,20 @@ export default function HomePage() {
         </div>
       )}
 
-      <MonthPicker month={month} year={year} onPrev={handlePrev} onNext={handleNext} />
+      {hasCustomRange ? (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '12px 16px', background: colors.card, margin: '8px 16px',
+          border: `1px solid ${colors.border}`, borderRadius: 10,
+          textAlign: 'center'
+        }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: colors.text }}>
+            {filters.startDate || '...'}  &larr;  {filters.endDate || '...'}
+          </span>
+        </div>
+      ) : (
+        <MonthPicker month={month} year={year} onPrev={handlePrev} onNext={handleNext} />
+      )}
 
       {/* Summary Card */}
       <div className="card">
@@ -73,7 +95,7 @@ export default function HomePage() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: colors.expense }}>{totalYmr.toLocaleString()}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: colors.expense }}>{totalYmr?.toLocaleString()}</div>
             <div style={{ fontSize: 12, color: colors.textSecondary }}>{currencyConfig.secondary.name}</div>
           </div>
           <div style={{ width: 1, height: 40, background: colors.border, margin: '0 16px' }} />

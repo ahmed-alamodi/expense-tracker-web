@@ -7,7 +7,6 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { Debt } from '@/types/expense';
 import { getDebts, createDebt, updateDebt, payDebtInstallment, deleteDebt } from '@/lib/database';
 import { isConfigured } from '@/lib/supabase';
-import { sarToYmr } from '@/lib/storage';
 import { useSettings } from '@/lib/settings-context';
 import DebtFormModal from '@/components/debts/DebtFormModal';
 import PayInstallmentModal from '@/components/debts/PayInstallmentModal';
@@ -15,11 +14,11 @@ import PayInstallmentModal from '@/components/debts/PayInstallmentModal';
 export default function DebtsPage() {
   const { t } = useTranslation();
   const colors = useThemeColor();
-  const { exchangeRate } = useSettings();
+  const { exchangeRate, currencyConfig } = useSettings();
 
   const [debts, setDebts] = useState<Debt[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingDebt, setEditingDebt] = useState<Debt | null>(null);
   const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
@@ -44,48 +43,74 @@ export default function DebtsPage() {
     fetchDebts();
   }, []);
 
-  const handleAddDebt = async (data: { name: string; total_amount_sar: number; remaining_amount_sar: number; start_date: string; notes: string }) => {
+  const handleAddDebt = async (data: {
+    name: string;
+    total_amount_sar: number;
+    remaining_amount_sar: number;
+    total_amount_ymr: number;
+    remaining_amount_ymr: number;
+    start_date: string;
+    notes: string;
+  }) => {
     await createDebt({
       name: data.name,
       total_amount_sar: data.total_amount_sar,
       remaining_amount_sar: data.remaining_amount_sar,
+      total_amount_ymr: data.total_amount_ymr,
+      remaining_amount_ymr: data.remaining_amount_ymr,
       start_date: data.start_date,
       notes: data.notes
     });
     fetchDebts();
   };
 
-  const handleEditDebt = async (data: { name: string; total_amount_sar: number; remaining_amount_sar: number; start_date: string; notes: string }) => {
+  const handleEditDebt = async (data: {
+    name: string;
+    total_amount_sar: number;
+    remaining_amount_sar: number;
+    total_amount_ymr: number;
+    remaining_amount_ymr: number;
+    start_date: string;
+    notes: string;
+  }) => {
     if (!editingDebt) return;
     await updateDebt(editingDebt.id, {
       name: data.name,
       total_amount_sar: data.total_amount_sar,
       remaining_amount_sar: data.remaining_amount_sar,
+      total_amount_ymr: data.total_amount_ymr,
+      remaining_amount_ymr: data.remaining_amount_ymr,
       start_date: data.start_date,
       notes: data.notes
     });
     fetchDebts();
   };
 
-  const handlePayInstallment = async (data: { amount: number; date: string; category: string; paymentMethod: string }) => {
+  const handlePayInstallment = async (data: { amountSar: number; amountYmr: number; date: string; category: string; paymentMethod: string }) => {
     if (!selectedDebt) return;
-    
+
     // Create the expense record
-    const amountYmr = sarToYmr(data.amount, exchangeRate);
     const expenseData = {
       date: data.date,
       main_category: data.category,
       sub_category: '',
       description: `${t('debts.paymentExpenseDescription')}${selectedDebt.name}`,
-      amount_sar: data.amount,
-      amount_ymr: amountYmr,
+      amount_sar: data.amountSar,
+      amount_ymr: data.amountYmr,
       exchange_rate: exchangeRate,
       payment_method: data.paymentMethod,
       notes: null,
       tag_id: null
     };
 
-    await payDebtInstallment(selectedDebt.id, data.amount, expenseData, selectedDebt.remaining_amount_sar);
+    await payDebtInstallment(
+      selectedDebt.id,
+      data.amountSar,
+      data.amountYmr,
+      expenseData,
+      selectedDebt.remaining_amount_sar,
+      selectedDebt.remaining_amount_ymr
+    );
     fetchDebts();
   };
 
@@ -123,8 +148,12 @@ export default function DebtsPage() {
           </div>
         ) : (
           debts.map(debt => {
-            const progress = ((debt.total_amount_sar - debt.remaining_amount_sar) / debt.total_amount_sar) * 100;
-            
+            const total = debt.total_amount_sar || 0;
+            const remaining = debt.remaining_amount_sar || 0;
+            const progress = total > 0
+              ? ((total - remaining) / total) * 100
+              : (debt.total_amount_ymr > 0 ? ((debt.total_amount_ymr - debt.remaining_amount_ymr) / debt.total_amount_ymr) * 100 : 0);
+
             return (
               <div key={debt.id} className="card" style={{ margin: '0 0 16px 0' }}>
                 <div className="flex-between mb-3">
@@ -138,33 +167,33 @@ export default function DebtsPage() {
                     </button>
                   </div>
                 </div>
-                
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13 }}>
                   <span style={{ color: colors.textSecondary }}>{t('debts.remainingAmount')}</span>
                   <span style={{ fontWeight: 700, color: colors.expense }}>
-                    {debt.remaining_amount_sar.toFixed(2)} {t('common.sar')}
+                    {debt.remaining_amount_sar.toFixed(2)} {currencyConfig.primary.symbol} / {debt.remaining_amount_ymr?.toLocaleString()} {currencyConfig.secondary.symbol}
                   </span>
                 </div>
-                
+
                 <div className="progress-bar mb-3">
                   <div className="progress-fill" style={{ width: `${Math.min(100, Math.max(0, progress))}%`, backgroundColor: colors.success }} />
                 </div>
-                
+
                 <div className="flex-between mb-4 text-xs" style={{ color: colors.textSecondary }}>
-                  <span>{t('debts.totalAmount')}: {debt.total_amount_sar.toFixed(2)}</span>
+                  <span>{t('debts.totalAmount')}: {debt.total_amount_sar.toFixed(2)} {currencyConfig.primary.symbol} / {debt.total_amount_ymr?.toLocaleString()} {currencyConfig.secondary.symbol}</span>
                   <span>{debt.start_date}</span>
                 </div>
-                
+
                 {debt.notes && (
                   <div className="text-sm mb-4" style={{ color: colors.textSecondary, background: 'var(--color-bg)', padding: 8, borderRadius: 6 }}>
                     {debt.notes}
                   </div>
                 )}
-                
-                <button 
-                  className="btn btn-primary btn-full" 
+
+                <button
+                  className="btn btn-primary btn-full"
                   onClick={() => setSelectedDebt(debt)}
-                  disabled={debt.remaining_amount_sar <= 0}
+                  disabled={debt.remaining_amount_sar <= 0 && debt.remaining_amount_ymr <= 0}
                 >
                   {t('debts.payInstallment')}
                 </button>
@@ -175,25 +204,25 @@ export default function DebtsPage() {
       </div>
 
       {showAddModal && (
-        <DebtFormModal 
-          onClose={() => setShowAddModal(false)} 
-          onSubmit={handleAddDebt} 
+        <DebtFormModal
+          onClose={() => setShowAddModal(false)}
+          onSubmit={handleAddDebt}
         />
       )}
 
       {editingDebt && (
-        <DebtFormModal 
-          onClose={() => setEditingDebt(null)} 
+        <DebtFormModal
+          onClose={() => setEditingDebt(null)}
           onSubmit={handleEditDebt}
           initialData={editingDebt}
         />
       )}
 
       {selectedDebt && (
-        <PayInstallmentModal 
-          debt={selectedDebt} 
-          onClose={() => setSelectedDebt(null)} 
-          onSubmit={handlePayInstallment} 
+        <PayInstallmentModal
+          debt={selectedDebt}
+          onClose={() => setSelectedDebt(null)}
+          onSubmit={handlePayInstallment}
         />
       )}
     </>

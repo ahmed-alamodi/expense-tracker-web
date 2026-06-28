@@ -5,30 +5,53 @@ import { useTranslation } from 'react-i18next';
 import { IoClose } from 'react-icons/io5';
 import { Debt } from '@/types/expense';
 import { useSettings } from '@/lib/settings-context';
+import { sarToYmr, ymrToSar } from '@/lib/storage';
 
 interface Props {
   debt: Debt;
   onClose: () => void;
-  onSubmit: (data: { amount: number; date: string; category: string; paymentMethod: string }) => Promise<void>;
+  onSubmit: (data: { amountSar: number; amountYmr: number; date: string; category: string; paymentMethod: string }) => Promise<void>;
 }
 
 export default function PayInstallmentModal({ debt, onClose, onSubmit }: Props) {
   const { t } = useTranslation();
-  const { categories, paymentMethods } = useSettings();
-  
-  const [amount, setAmount] = useState('');
+  const { categories, paymentMethods, exchangeRate, currencyConfig } = useSettings();
+
+  const [amountSar, setAmountSar] = useState('');
+  const [amountYmr, setAmountYmr] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [category, setCategory] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const handleAmountSarChange = (val: string) => {
+    setAmountSar(val);
+    const num = parseFloat(val);
+    if (!isNaN(num)) {
+      setAmountYmr(sarToYmr(num, exchangeRate).toString());
+    } else {
+      setAmountYmr('');
+    }
+  };
+
+  const handleAmountYmrChange = (val: string) => {
+    setAmountYmr(val);
+    const num = parseFloat(val);
+    if (!isNaN(num)) {
+      setAmountSar(ymrToSar(num, exchangeRate).toString());
+    } else {
+      setAmountSar('');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !category || !paymentMethod) return;
+    if ((!amountSar && !amountYmr) || !category || !paymentMethod) return;
     setSaving(true);
     try {
       await onSubmit({
-        amount: parseFloat(amount) || 0,
+        amountSar: parseFloat(amountSar) || 0,
+        amountYmr: parseFloat(amountYmr) || 0,
         date,
         category,
         paymentMethod
@@ -53,15 +76,23 @@ export default function PayInstallmentModal({ debt, onClose, onSubmit }: Props) 
           <div style={{ marginBottom: 16, padding: 12, background: 'var(--color-bg)', borderRadius: 8, border: '1px solid var(--color-border)' }}>
             <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{t('debts.debtName')}</div>
             <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{debt.name}</div>
-            
+
             <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{t('debts.remainingAmount')}</div>
             <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-expense)' }}>
-              {debt.remaining_amount_sar.toFixed(2)} {t('common.sar')}
+              {debt.remaining_amount_sar.toFixed(2)} {currencyConfig.primary.symbol} / {debt.remaining_amount_ymr?.toLocaleString()} {currencyConfig.secondary.symbol}
             </div>
           </div>
 
-          <label className="label">{t('debts.paymentAmount')} ({t('common.sar')})</label>
-          <input className="input" type="number" step="0.01" max={debt.remaining_amount_sar} value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" required />
+          <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+            <div style={{ flex: 1 }}>
+              <label className="label">{t('debts.paymentAmount')} ({currencyConfig.primary.symbol})</label>
+              <input className="input" type="number" step="0.01" max={debt.remaining_amount_sar} value={amountSar} onChange={e => handleAmountSarChange(e.target.value)} placeholder="0.00" required />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label className="label">{t('debts.paymentAmount')} ({currencyConfig.secondary.symbol})</label>
+              <input className="input" type="number" step="0.01" max={debt.remaining_amount_ymr} value={amountYmr} onChange={e => handleAmountYmrChange(e.target.value)} placeholder="0.00" required />
+            </div>
+          </div>
 
           <label className="label">{t('debts.paymentDate')}</label>
           <input type="date" className="input" value={date} onChange={e => setDate(e.target.value)} required />
@@ -82,7 +113,7 @@ export default function PayInstallmentModal({ debt, onClose, onSubmit }: Props) 
             <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>
               {t('common.cancel')}
             </button>
-            <button type="submit" className="btn btn-primary" style={{ flex: 2 }} disabled={saving || !amount || !category || !paymentMethod}>
+            <button type="submit" className="btn btn-primary" style={{ flex: 2 }} disabled={saving || (!amountSar && !amountYmr) || !category || !paymentMethod}>
               {saving ? t('common.saving') : t('common.save')}
             </button>
           </div>

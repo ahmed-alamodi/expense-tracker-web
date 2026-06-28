@@ -32,6 +32,11 @@ export default {
     search: 'Search...',
     allCategories: 'All Categories',
     allPayments: 'All Payments',
+    startDate: 'Start Date',
+    endDate: 'End Date',
+    clearDates: 'Clear Date Filter',
+    applyDates: 'Apply',
+    dateRange: 'Select Period',
   },
   add: {
     addExpense: 'Add Expense',

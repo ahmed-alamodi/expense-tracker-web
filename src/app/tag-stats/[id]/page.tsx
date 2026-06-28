@@ -31,7 +31,7 @@ export default function TagStatsPage() {
         setTag(allTags.find(t => t.id === id) || null);
         setStats(tagStats);
         setExpenses(tagExpenses);
-      } catch {} finally { setLoading(false); }
+      } catch { } finally { setLoading(false); }
     })();
   }, [id]);
 
@@ -56,7 +56,7 @@ export default function TagStatsPage() {
       <div style={{ margin: 16, padding: 20, borderRadius: 16, background: tag.color, textAlign: 'center' }}>
         <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13 }}>{t('tags.tagTotal')}</div>
         <div style={{ color: '#fff', fontSize: 28, fontWeight: 800 }}>{stats.totalSar.toFixed(2)} {currencyConfig.primary.symbol}</div>
-        <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 14, marginTop: 2 }}>{stats.totalYmr.toLocaleString()} {currencyConfig.secondary.symbol}</div>
+        <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 14, marginTop: 2 }}>{stats.totalYmr?.toLocaleString()} {currencyConfig.secondary.symbol}</div>
         <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 6 }}>{stats.count} {t('tags.expensesCount')}</div>
       </div>
 
@@ -88,7 +88,7 @@ export default function TagStatsPage() {
             </div>
             <div style={{ textAlign: 'left' }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: colors.expense }}>{expense.amount_sar.toFixed(2)} {currencyConfig.primary.symbol}</div>
-              <div style={{ fontSize: 12, color: colors.textSecondary }}>{expense.amount_ymr.toLocaleString()} {currencyConfig.secondary.symbol}</div>
+              <div style={{ fontSize: 12, color: colors.textSecondary }}>{expense.amount_ymr?.toLocaleString()} {currencyConfig.secondary.symbol}</div>
             </div>
           </div>
         </div>

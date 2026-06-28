@@ -1,14 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { IoSearchOutline, IoClose } from 'react-icons/io5';
+import DateRangePicker from '@/components/DateRangePicker';
 
 export interface Filters {
   search: string;
   mainCategory: string;
   paymentMethod: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 interface Props {
@@ -45,7 +48,7 @@ export default function SearchFilter({ filters, onFiltersChange, categoryNames, 
         )}
       </div>
 
-      {/* Filter chips */}
+      {/* Category + Payment filters */}
       <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
         <select
           className="input"
@@ -66,6 +69,18 @@ export default function SearchFilter({ filters, onFiltersChange, categoryNames, 
           {paymentMethods.map(m => <option key={m} value={m}>{m}</option>)}
         </select>
       </div>
+
+      {/* Date Range Picker */}
+      <div style={{ marginTop: 8 }}>
+        <DateRangePicker
+          startDate={filters.startDate || ''}
+          endDate={filters.endDate || ''}
+          onApply={(start, end) => onFiltersChange({ ...filters, startDate: start, endDate: end })}
+          onClear={() => onFiltersChange({ ...filters, startDate: '', endDate: '' })}
+        />
+      </div>
     </div>
   );
 }
+
+

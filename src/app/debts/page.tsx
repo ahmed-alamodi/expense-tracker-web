@@ -8,6 +8,7 @@ import { Debt } from '@/types/expense';
 import { getDebts, createDebt, updateDebt, payDebtInstallment, deleteDebt } from '@/lib/database';
 import { isConfigured } from '@/lib/supabase';
 import { useSettings } from '@/lib/settings-context';
+import { sarToYmr } from '@/lib/storage';
 import DebtFormModal from '@/components/debts/DebtFormModal';
 import PayInstallmentModal from '@/components/debts/PayInstallmentModal';
 
@@ -171,7 +172,7 @@ export default function DebtsPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13 }}>
                   <span style={{ color: colors.textSecondary }}>{t('debts.remainingAmount')}</span>
                   <span style={{ fontWeight: 700, color: colors.expense }}>
-                    {debt.remaining_amount_sar.toFixed(2)} {currencyConfig.primary.symbol} / {debt.remaining_amount_ymr?.toLocaleString()} {currencyConfig.secondary.symbol}
+                    {debt.remaining_amount_sar.toFixed(2)} {currencyConfig.primary.symbol} / {(debt.remaining_amount_ymr > 0 ? debt.remaining_amount_ymr : sarToYmr(debt.remaining_amount_sar, exchangeRate)).toLocaleString()} {currencyConfig.secondary.symbol}
                   </span>
                 </div>
 
@@ -180,7 +181,7 @@ export default function DebtsPage() {
                 </div>
 
                 <div className="flex-between mb-4 text-xs" style={{ color: colors.textSecondary }}>
-                  <span>{t('debts.totalAmount')}: {debt.total_amount_sar.toFixed(2)} {currencyConfig.primary.symbol} / {debt.total_amount_ymr?.toLocaleString()} {currencyConfig.secondary.symbol}</span>
+                  <span>{t('debts.totalAmount')}: {debt.total_amount_sar.toFixed(2)} {currencyConfig.primary.symbol} / {(debt.total_amount_ymr > 0 ? debt.total_amount_ymr : sarToYmr(debt.total_amount_sar, exchangeRate)).toLocaleString()} {currencyConfig.secondary.symbol}</span>
                   <span>{debt.start_date}</span>
                 </div>
 

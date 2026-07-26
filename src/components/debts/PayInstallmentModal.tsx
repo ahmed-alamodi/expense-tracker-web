@@ -63,6 +63,18 @@ export default function PayInstallmentModal({ debt, onClose, onSubmit }: Props) 
     }
   };
 
+  const maxSar = debt.remaining_amount_sar > 0 
+    ? debt.remaining_amount_sar 
+    : (debt.remaining_amount_ymr > 0 ? ymrToSar(debt.remaining_amount_ymr, exchangeRate) : undefined);
+
+  const maxYmr = debt.remaining_amount_ymr > 0 
+    ? debt.remaining_amount_ymr 
+    : (debt.remaining_amount_sar > 0 ? sarToYmr(debt.remaining_amount_sar, exchangeRate) : undefined);
+
+  const displayRemainingYmr = debt.remaining_amount_ymr > 0 
+    ? debt.remaining_amount_ymr 
+    : (debt.remaining_amount_sar > 0 ? sarToYmr(debt.remaining_amount_sar, exchangeRate) : 0);
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-sheet" onClick={e => e.stopPropagation()}>
@@ -79,18 +91,18 @@ export default function PayInstallmentModal({ debt, onClose, onSubmit }: Props) 
 
             <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{t('debts.remainingAmount')}</div>
             <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-expense)' }}>
-              {debt.remaining_amount_sar.toFixed(2)} {currencyConfig.primary.symbol} / {debt.remaining_amount_ymr?.toLocaleString()} {currencyConfig.secondary.symbol}
+              {debt.remaining_amount_sar.toFixed(2)} {currencyConfig.primary.symbol} / {displayRemainingYmr.toLocaleString()} {currencyConfig.secondary.symbol}
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
             <div style={{ flex: 1 }}>
               <label className="label">{t('debts.paymentAmount')} ({currencyConfig.primary.symbol})</label>
-              <input className="input" type="number" step="0.01" max={debt.remaining_amount_sar} value={amountSar} onChange={e => handleAmountSarChange(e.target.value)} placeholder="0.00" required />
+              <input className="input" type="number" step="0.01" max={maxSar} value={amountSar} onChange={e => handleAmountSarChange(e.target.value)} placeholder="0.00" />
             </div>
             <div style={{ flex: 1 }}>
               <label className="label">{t('debts.paymentAmount')} ({currencyConfig.secondary.symbol})</label>
-              <input className="input" type="number" step="0.01" max={debt.remaining_amount_ymr} value={amountYmr} onChange={e => handleAmountYmrChange(e.target.value)} placeholder="0.00" required />
+              <input className="input" type="number" step="0.01" max={maxYmr} value={amountYmr} onChange={e => handleAmountYmrChange(e.target.value)} placeholder="0.00" />
             </div>
           </div>
 

@@ -1,0 +1,436 @@
+/* ═══════════════════════════════════════════════════════════════
+   CSV Import Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Drop Zone ── */
+.dropZone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius);
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: var(--color-card);
+  position: relative;
+  overflow: hidden;
+}
+
+.dropZone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--color-tint), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: var(--radius);
+}
+
+.dropZone:hover {
+  border-color: var(--color-tint);
+  transform: translateY(-1px);
+}
+
+.dropZone:hover::before {
+  opacity: 0.03;
+}
+
+.dropZoneActive {
+  border-color: var(--color-tint);
+  background: rgba(37, 99, 235, 0.04);
+  transform: scale(1.01);
+}
+
+[data-theme="dark"] .dropZoneActive {
+  background: rgba(96, 165, 250, 0.06);
+}
+
+.dropZoneIcon {
+  font-size: 48px;
+  color: var(--color-tint);
+  margin-bottom: 12px;
+  opacity: 0.8;
+  animation: floatUpDown 3s ease-in-out infinite;
+}
+
+@keyframes floatUpDown {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.dropZoneTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.dropZoneHint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.dropZoneInput {
+  display: none;
+}
+
+.dropZoneConstraints {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-top: 12px;
+  opacity: 0.7;
+}
+
+/* ── Template Download ── */
+.templateSection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  margin: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.templateSection:hover {
+  border-color: var(--color-tint);
+  background: rgba(37, 99, 235, 0.03);
+}
+
+[data-theme="dark"] .templateSection:hover {
+  background: rgba(96, 165, 250, 0.05);
+}
+
+.templateIcon {
+  font-size: 24px;
+  color: var(--color-success);
+  flex-shrink: 0;
+}
+
+.templateText {
+  flex: 1;
+}
+
+.templateTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.templateDesc {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+/* ── File Error Banner ── */
+.fileError {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin: 8px 16px;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--color-danger);
+  font-size: 13px;
+  font-weight: 600;
+  animation: shakeX 0.4s ease;
+}
+
+@keyframes shakeX {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.fileErrorIcon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* ── Preview Table ── */
+.previewContainer {
+  margin: 8px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--color-card);
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.previewStats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.previewStat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.statDotValid { background: var(--color-success); }
+.statDotWarning { background: var(--color-warning); }
+.statDotError { background: var(--color-danger); }
+.statDotDuplicate { background: #8B5CF6; }
+
+.previewTableWrapper {
+  overflow-x: auto;
+  max-height: 380px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.previewTable {
+  width: 100%;
+  min-width: 700px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.previewTable thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.previewTable th {
+  background: var(--color-bg);
+  font-weight: 700;
+  padding: 10px 12px;
+  text-align: start;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.previewTable td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.previewTable tbody tr {
+  transition: background-color 0.15s;
+}
+
+.previewTable tbody tr:hover {
+  background: rgba(37, 99, 235, 0.03);
+}
+
+.rowValid {}
+.rowWarning { background: rgba(217, 119, 6, 0.04) !important; }
+.rowError { background: rgba(220, 38, 38, 0.04) !important; }
+.rowDuplicate { background: rgba(139, 92, 246, 0.04) !important; }
+
+/* ── Row Status Badge ── */
+.rowStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.statusValid {
+  background: rgba(5, 150, 105, 0.1);
+  color: var(--color-success);
+}
+
+.statusWarning {
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--color-warning);
+}
+
+.statusError {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--color-danger);
+}
+
+.statusDuplicate {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+/* ── Error Tooltip (expandable row errors) ── */
+.rowErrors {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 0;
+}
+
+.rowErrorItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--color-danger);
+}
+
+.rowWarningItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--color-warning);
+}
+
+/* ── Import Actions ── */
+.importActions {
+  display: flex;
+  gap: 8px;
+  padding: 16px;
+  flex-wrap: wrap;
+}
+
+/* ── Import Progress ── */
+.progressContainer {
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.progressLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 12px;
+}
+
+.progressBarOuter {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--color-border);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progressBarInner {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--color-tint), var(--color-success));
+  transition: width 0.3s ease;
+}
+
+.progressCount {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+/* ── Import Summary ── */
+.summary {
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.summaryIcon {
+  font-size: 56px;
+  margin-bottom: 12px;
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.summaryTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.summarySubtitle {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-bottom: 20px;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.summaryCard {
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+
+.summaryCardValue {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.summaryCardLabel {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+/* ── New Payment Methods Notice ── */
+.newMethodsNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 16px;
+  margin: 8px 16px;
+  background: rgba(5, 150, 105, 0.06);
+  border: 1px solid rgba(5, 150, 105, 0.15);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--color-success);
+}
+
+.newMethodsIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 520px) {
+  .dropZone {
+    padding: 28px 16px;
+  }
+  .summaryGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .previewTableWrapper {
+    max-height: 300px;
+  }
+}

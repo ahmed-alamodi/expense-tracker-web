@@ -83,6 +83,16 @@ export async function createExpense(expense: Omit<Expense, 'id' | 'created_at' |
   return data as Expense;
 }
 
+export async function createExpenses(expenses: Omit<Expense, 'id' | 'created_at' | 'user_id'>[]) {
+  if (expenses.length === 0) return [];
+  const { data, error } = await supabase
+    .from('expenses')
+    .insert(expenses)
+    .select();
+  if (error) throw error;
+  return data as Expense[];
+}
+
 export async function updateExpense(id: string, expense: Partial<Expense>) {
   const { data, error } = await supabase
     .from('expenses')

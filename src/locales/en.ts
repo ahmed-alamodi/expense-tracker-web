@@ -112,6 +112,8 @@ export default {
     managePaymentMethodsDesc: 'Add and remove different payment methods',
     manageTags: 'Tags & Events',
     manageTagsDesc: 'Create tags for trips, projects, and events to track expenses',
+    importExpenses: 'Import Expenses (CSV)',
+    importExpensesDesc: 'Bulk import expenses from a CSV template file',
   },
   appLock: {
     locked: 'App Locked',
@@ -358,5 +360,19 @@ export default {
     errorTooManyRows: 'File exceeds maximum allowed rows (500)',
     errorParsingFailed: 'Failed to parse CSV file',
     errorImportFailed: 'Failed to import data',
+  },
+  validation: {
+    dateRequired: 'Date is required',
+    dateInvalid: 'Date is not valid',
+    mainCategoryRequired: 'Main category is required',
+    mainCategoryUnknown: 'Main category not found in the system',
+    subCategoryInvalid: 'Sub-category does not belong to the selected main category',
+    descriptionRequired: 'Description is required',
+    amountRequired: 'At least one amount must be provided',
+    amountSarInvalid: 'SAR amount is not a valid number',
+    amountYmrInvalid: 'YMR amount is not a valid number',
+    amountNegative: 'Amount cannot be negative',
+    paymentMethodUnknown: 'Payment method is not defined in the system',
+    tagUnknown: 'Tag not found in the system',
   },
 };

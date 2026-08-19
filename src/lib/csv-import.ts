@@ -66,7 +66,14 @@ const COLUMN_MAP: Record<string, string> = {
 };
 
 // Reverse mapping (AR → EN key)
-const REVERSE_COLUMN_MAP: Record<string, string> = {};
+const REVERSE_COLUMN_MAP: Record<string, string> = {
+  // User custom Arabic header aliases
+  'المبلغ (ر.س)': 'amount_sar',
+  'المبلغ(ر.س)': 'amount_sar',
+  'المبلغ (يمني)': 'amount_ymr',
+  'المبلغ(يمني)': 'amount_ymr',
+  'سعر الصرف': 'exchange_rate',
+};
 for (const [en, ar] of Object.entries(COLUMN_MAP)) {
   REVERSE_COLUMN_MAP[ar] = en;
   REVERSE_COLUMN_MAP[en] = en; // also map EN to itself
@@ -184,13 +191,28 @@ export function parseCsvText(text: string): { headers: string[]; rows: Record<st
     return { headers: [], rows: [], errors };
   }
 
-  // Parse header row
-  const rawHeaders = parseCsvLine(lines[0]);
-  const headers = rawHeaders.map(h => {
-    const trimmed = h.trim();
-    // Normalize to internal key
-    return REVERSE_COLUMN_MAP[trimmed] || trimmed;
-  });
+  // Detect whether the first row is a header or data.
+  // Strategy: parse the first row and check how many of its cells match a
+  // known column name (EN or AR). If none match, the file has no header row
+  // and we fall back to positional mapping using the template column order.
+  const firstRowFields = parseCsvLine(lines[0]).map(h => h.trim());
+  const recognizedCount = firstRowFields.filter(
+    h => REVERSE_COLUMN_MAP[h] !== undefined
+  ).length;
+  const hasHeader = recognizedCount > 0;
+
+  let headers: string[];
+  let dataStartIndex: number;
+
+  if (hasHeader) {
+    // Map each header cell to its internal key
+    headers = firstRowFields.map(h => REVERSE_COLUMN_MAP[h] || h);
+    dataStartIndex = 1;
+  } else {
+    // No header row — assume the default template column order
+    headers = ALL_COLUMNS; // ['date','main_category','sub_category','description','amount_sar','amount_ymr','payment_method','notes','tag']
+    dataStartIndex = 0;
+  }
 
   // Check required columns
   const missingRequired = REQUIRED_COLUMNS.filter(col => !headers.includes(col));
@@ -198,20 +220,21 @@ export function parseCsvText(text: string): { headers: string[]; rows: Record<st
     errors.push('import.errorMissingColumns');
   }
 
-  if (lines.length < 2) {
+  const totalDataLines = lines.length - dataStartIndex;
+  if (totalDataLines < 1) {
     errors.push('import.errorNoData');
     return { headers, rows: [], errors };
   }
 
-  if (lines.length - 1 > MAX_ROWS) {
+  if (totalDataLines > MAX_ROWS) {
     errors.push('import.errorTooManyRows');
   }
 
   // Parse data rows
   const dataRows: Record<string, string>[] = [];
-  const rowCount = Math.min(lines.length - 1, MAX_ROWS);
+  const rowCount = Math.min(lines.length, dataStartIndex + MAX_ROWS);
 
-  for (let i = 1; i <= rowCount; i++) {
+  for (let i = dataStartIndex; i < rowCount; i++) {
     const values = parseCsvLine(lines[i]);
     const row: Record<string, string> = {};
     for (let j = 0; j < headers.length; j++) {
@@ -286,16 +309,25 @@ export function processRows(
     const amountSar = parseAmount(raw.amount_sar);
     const amountYmr = parseAmount(raw.amount_ymr);
 
-    // Auto-calculate missing amounts using current exchange rate
+    // Resolve exchange rate (use row exchange rate if valid, otherwise fallback to default exchangeRate)
+    let rowExchangeRate = exchangeRate;
+    if (raw.exchange_rate) {
+      const parsedRate = parseAmount(raw.exchange_rate);
+      if (parsedRate > 0) {
+        rowExchangeRate = parsedRate;
+      }
+    }
+
+    // Auto-calculate missing amounts using row exchange rate
     let finalSar = amountSar;
     let finalYmr = amountYmr;
     if (finalSar > 0 && finalYmr <= 0) {
-      finalYmr = sarToYmr(finalSar, exchangeRate);
+      finalYmr = sarToYmr(finalSar, rowExchangeRate);
     } else if (finalYmr > 0 && finalSar <= 0) {
-      finalSar = ymrToSar(finalYmr, exchangeRate);
+      finalSar = ymrToSar(finalYmr, rowExchangeRate);
     } else if (finalSar > 0 && finalYmr > 0) {
-      // Both provided — recalculate using current exchange rate
-      finalYmr = sarToYmr(finalSar, exchangeRate);
+      // Both provided — recalculate using the row exchange rate
+      finalYmr = sarToYmr(finalSar, rowExchangeRate);
     }
 
     // Resolve tag name → tag ID
@@ -318,7 +350,7 @@ export function processRows(
       description: (raw.description || '').trim(),
       amount_sar: finalSar,
       amount_ymr: finalYmr,
-      exchange_rate: exchangeRate,
+      exchange_rate: rowExchangeRate,
       payment_method: (raw.payment_method || '').trim(),
       notes: (raw.notes || '').trim() || null,
       tag_id: tagId,
@@ -326,14 +358,6 @@ export function processRows(
 
     // Validate
     const errors = validateExpenseData(data, context);
-
-    // If tag was provided but not found, add warning
-    if (tagValue && !tagId) {
-      const hasTagWarning = errors.some(e => e.field === 'tag_id');
-      if (!hasTagWarning) {
-        errors.push({ field: 'tag_id', message: 'validation.tagUnknown', severity: 'warning' });
-      }
-    }
 
     // Check for duplicates against existing expenses
     const isDuplicate = existingExpenses.some(
@@ -384,15 +408,17 @@ export async function importExpenses(
   rows: ParsedRow[],
   onProgress?: (current: number, total: number) => void
 ): Promise<ImportResult> {
-  const importableRows = rows.filter(
-    r => r.status === 'valid' || r.status === 'warning'
-  );
+  // The caller is responsible for pre-filtering which rows to import
+  // (valid, warning, and optionally duplicates). We trust the input list
+  // and do NOT re-filter here so that duplicate rows are not accidentally
+  // stripped when the user explicitly opts to include them.
+  const importableRows = rows;
 
   const result: ImportResult = {
     total: rows.length,
     successful: 0,
     failed: 0,
-    skipped: rows.length - importableRows.length,
+    skipped: 0,
     errors: [],
   };
 

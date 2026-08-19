@@ -17,6 +17,7 @@ import {
   IoCashOutline, IoCardOutline, IoCalculatorOutline, IoListOutline,
   IoPricetagsOutline, IoInformationCircleOutline, IoLogOutOutline,
   IoChevronBack, IoAdd, IoClose, IoDocumentOutline, IoWalletOutline,
+  IoCloudUploadOutline,
 } from 'react-icons/io5';
 
 export default function SettingsPage() {
@@ -115,6 +116,7 @@ export default function SettingsPage() {
         { icon: IoCalculatorOutline, label: t('settings.monthlyEstimates'), desc: t('settings.monthlyEstimatesDesc'), href: '/estimates' },
         { icon: IoListOutline, label: t('settings.manageCategories'), desc: t('settings.manageCategoriesDesc'), href: '/categories' },
         { icon: IoPricetagsOutline, label: t('settings.manageTags'), desc: t('settings.manageTagsDesc'), href: '/tags' },
+        { icon: IoCloudUploadOutline, label: t('settings.importExpenses'), desc: t('settings.importExpensesDesc'), href: '/import' },
       ].map(item => (
         <div key={item.href} className="card" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onClick={() => router.push(item.href)}>
           <div>

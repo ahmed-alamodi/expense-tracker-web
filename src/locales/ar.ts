@@ -112,6 +112,8 @@ export default {
     managePaymentMethodsDesc: 'إضافة وحذف طرق الدفع المختلفة',
     manageTags: 'التصنيفات والأحداث',
     manageTagsDesc: 'إنشاء تصنيفات للرحلات والمشاريع والأحداث لتتبع المصاريف',
+    importExpenses: 'استيراد المصاريف (CSV)',
+    importExpensesDesc: 'استيراد جماعي للمصاريف من نموذج ملف CSV',
   },
   appLock: {
     locked: 'التطبيق مقفل',
@@ -358,5 +360,19 @@ export default {
     errorTooManyRows: 'يتجاوز الملف الحد الأقصى المسموح به (500 صف)',
     errorParsingFailed: 'فشلت عملية تحليل الملف',
     errorImportFailed: 'فشلت عملية استيراد البيانات',
+  },
+  validation: {
+    dateRequired: 'التاريخ مطلوب',
+    dateInvalid: 'التاريخ غير صالح',
+    mainCategoryRequired: 'الفئة الرئيسية مطلوبة',
+    mainCategoryUnknown: 'الفئة الرئيسية غير موجودة في النظام',
+    subCategoryInvalid: 'الفئة الفرعية لا تنتمي للفئة الرئيسية',
+    descriptionRequired: 'الوصف مطلوب',
+    amountRequired: 'يجب إدخال مبلغ واحد على الأقل',
+    amountSarInvalid: 'المبلغ بالريال السعودي غير صالح',
+    amountYmrInvalid: 'المبلغ بالريال اليمني غير صالح',
+    amountNegative: 'المبلغ لا يمكن أن يكون سالباً',
+    paymentMethodUnknown: 'طريقة الدفع غير معرّفة في النظام',
+    tagUnknown: 'التصنيف (Tag) غير موجود في النظام',
   },
 };

@@ -85,20 +85,9 @@ export function validateExpenseData(
     }
   }
 
-  // Payment method — optional, but warn if unknown
-  if (data.payment_method && data.payment_method.trim() !== '') {
-    if (!context.paymentMethods.includes(data.payment_method)) {
-      errors.push({ field: 'payment_method', message: 'validation.paymentMethodUnknown', severity: 'warning' });
-    }
-  }
+  // Payment method — optional, auto-created if unknown during import
 
-  // Tag — optional, warn if provided but not found
-  if (data.tag_id && data.tag_id.trim() !== '') {
-    const tagExists = context.tags.some(t => t.id === data.tag_id || t.name === data.tag_id);
-    if (!tagExists) {
-      errors.push({ field: 'tag_id', message: 'validation.tagUnknown', severity: 'warning' });
-    }
-  }
+  // Tag — optional, silently ignored if not found
 
   return errors;
 }
@@ -192,6 +181,8 @@ export function parseAmount(value: string | undefined | null): number {
   if (value === undefined || value === null || value === '') return 0;
   // Normalize Arabic digits
   let cleaned = normalizeArabicDigits(String(value));
+  // Normalize Arabic decimal separator (٫) to standard dot (.)
+  cleaned = cleaned.replace(/٫/g, '.');
   // Remove currency symbols, whitespace, commas
   cleaned = cleaned.replace(/[^\d.\-]/g, '');
   const num = parseFloat(cleaned);
